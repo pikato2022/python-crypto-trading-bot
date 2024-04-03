@@ -3,6 +3,7 @@ import asyncio
 import logging
 import time
 import json
+from utils.kafka_core import init_producer, broadcast_kafka
 
 
 def on_message(ws, message):
@@ -35,6 +36,7 @@ async def connect_websocket(uri, channel):
         },
     }
     heartbeat_id = None
+    producer = init_producer()
     while True:
         try:
             async with websockets.connect(uri) as ws:
@@ -44,6 +46,7 @@ async def connect_websocket(uri, channel):
 
                 while True:
                     res = await ws.recv()
+
                     # await asyncio.sleep(1)
                     res = json.loads(res)
                     if res['method'] == "public/heartbeat":
@@ -54,7 +57,15 @@ async def connect_websocket(uri, channel):
                             heartbeat_id)
                         await ws.send(heartbeat_request)
                         print("Sent heart beat response")
-                    print(f"Receive message {res}")
+                    else:
+                        print("Sending price to Kafka queue topic get_price")
+
+                        if "result" in res:
+                            await broadcast_kafka(
+                                producer, "get-price", res["result"])
+                            print(
+                                f"Sent price to Kafka queue topic get_price: {res}")
+                        # send to kafka
         except Exception as e:
             print(f"Error when connect : {e}")
             await asyncio.sleep(1)

@@ -1,5 +1,5 @@
-from core.websocket import connect_websocket
-import cf
+from utils.websocket import connect_websocket
+import cf as cf
 import asyncio
 
 
