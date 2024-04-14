@@ -1,0 +1,5 @@
+binance-connector
+kafka-python
+asyncio
+websockets
+websocket-client

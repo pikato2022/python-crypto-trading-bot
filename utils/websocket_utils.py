@@ -28,13 +28,7 @@ def create_heartbeat_request(id):
     return request_str
 
 
-async def connect_websocket(uri, channel):
-    sample_request = {
-        "method": "subscribe",
-        "params": {
-            "channels": [channel]
-        },
-    }
+async def connect_websocket(uri, sample_request):
     heartbeat_id = None
     producer = init_producer()
     while True:
@@ -61,7 +55,7 @@ async def connect_websocket(uri, channel):
                         print("Sending price to Kafka queue topic get_price")
 
                         if "result" in res:
-                            await broadcast_kafka(
+                            broadcast_kafka(
                                 producer, "get-price", res["result"])
                             print(
                                 f"Sent price to Kafka queue topic get_price: {res}")

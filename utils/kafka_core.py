@@ -14,5 +14,5 @@ def init_producer():
     return producer
 
 
-async def broadcast_kafka(producer: KafkaProducer, topic: str, message):
+def broadcast_kafka(producer: KafkaProducer, topic: str, message):
     producer.send(topic, message)

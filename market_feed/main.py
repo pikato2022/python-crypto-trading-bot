@@ -1,12 +1,19 @@
-from utils.websocket import connect_websocket
-import cf as cf
+from utils.websocket_utils import connect_websocket
+import utils.constant as constant
 import asyncio
 
 
 async def main():
     try:
         # get orders
-        await connect_websocket(cf.DEV_WEBSOCKET_ROOT_ENDPOINT_MARKET, "book.BTCUSD-PERP.10")
+        channel = "book.BTCUSD-PERP.10"
+        sample_request = {
+            "method": "subscribe",
+            "params": {
+                "channels": [channel]
+            },
+        }
+        await connect_websocket(constant.DEV_WEBSOCKET_ROOT_ENDPOINT_MARKET, sample_request)
         # strategy
         #
     except Exception as e:
