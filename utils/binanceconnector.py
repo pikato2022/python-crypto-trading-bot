@@ -75,9 +75,9 @@ if __name__ == "__main__":
         # show_header=True,
     )
     binanceConnector = BinanceConnector(producer, apiClient)
-    binanceConnector.create_order(64000, Side.BUY)
+    binanceConnector.create_order(64950, Side.BUY)
     balance = binanceConnector.get_balance()
-    binanceConnector.create_order(64050, Side.SELL)
+    binanceConnector.create_order(64900, Side.SELL)
     balance = binanceConnector.get_balance()
     logging.info(f"Current balance : {balance[1]}")
     # asyncio.run(binanceConnector.get_binance_trade_stream(symbol))

@@ -51,3 +51,5 @@ coverage.xml
 docs/_build/
 
 constant.py
+
+/venv
