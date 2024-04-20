@@ -2,16 +2,16 @@ import asyncio
 from asyncio import constants
 import time
 import logging
-from binance.lib.utils import config_logging
+from my_log import config_logging
 from binance.websocket.spot.websocket_stream import SpotWebsocketStreamClient
 from kafka import KafkaProducer
 from binance.spot import Spot
 import json
-from model.order import BinanceOrder, BinanceTimeInForce, OrderType
+from model.order import BinanceOrder, BinanceTimeInForce, OrderType, Side
 import utils.constant as constant
 from utils.kafka_core import broadcast_kafka, init_producer
 
-config_logging(logging, logging.INFO)
+config_logging(logging, logging.DEBUG)
 
 
 class BinanceConnector:
@@ -40,15 +40,29 @@ class BinanceConnector:
         # logging.info("closing ws connection")
         # my_client.stop()
 
-    def create_order(self, price, isSell):
-        logging.info(self.apiClient.time())
+    def create_order(self, price, side: Side):
+        # logging.info(self.apiClient.time())
         order = BinanceOrder(
-            price, isSell, 1, OrderType.LIMIT, BinanceTimeInForce.IOC, "BTCUSDT"
+            price,
+            side,
+            0.0001,
+            OrderType.LIMIT,
+            BinanceTimeInForce.IOC,
+            "BTCUSDT",
         )
-        logging.info(f"Created order {order.to_exchange_dict()}")
-        self.apiClient.new_order_test(
-            "BTCUSDT", "SELL", OrderType.LIMIT, **order.to_exchange_dict()
+        logging.info(f"Created order {order.to_exchange_dict}")
+        response = self.apiClient.new_order_test(
+            "BTCUSDT",
+            order.side.value,
+            OrderType.LIMIT,
+            **order.to_exchange_dict(),
         )
+        logging.info(f"Response from order request: {response}")
+
+    def get_balance(self):
+        balance_json = self.apiClient.account()
+        # logging.INFO(f"Current balance is {balance_json['balances']}")
+        return balance_json["balances"]
 
 
 if __name__ == "__main__":
@@ -58,7 +72,12 @@ if __name__ == "__main__":
         constant.BINANCE_TEST_API_KEY,
         constant.BINANCE_TEST_API_SECRET,
         base_url=constant.DEV_BINANCE_API_ENDPOINT,
+        # show_header=True,
     )
     binanceConnector = BinanceConnector(producer, apiClient)
-    binanceConnector.create_order(64000, True)
+    binanceConnector.create_order(64000, Side.BUY)
+    balance = binanceConnector.get_balance()
+    binanceConnector.create_order(64050, Side.SELL)
+    balance = binanceConnector.get_balance()
+    logging.info(f"Current balance : {balance[1]}")
     # asyncio.run(binanceConnector.get_binance_trade_stream(symbol))

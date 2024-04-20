@@ -1,13 +1,6 @@
 from enum import StrEnum, auto
 
 
-class Order:
-    def __init__(self, price: float, isSell: bool, quantity: float) -> None:
-        self.price = price
-        self.isSell = isSell
-        self.quantity = quantity
-
-
 # LIMIT	timeInForce, quantity, price
 # MARKET	quantity or quoteOrderQty
 # STOP_LOSS	quantity, stopPrice or trailingDelta
@@ -23,6 +16,11 @@ class BinanceTimeInForce(StrEnum):
     FOK = auto()
 
 
+class Side(StrEnum):
+    BUY = auto()
+    SELL = auto()
+
+
 class OrderType(StrEnum):
     LIMIT = auto()
     MARKET = auto()
@@ -36,23 +34,30 @@ class OrderType(StrEnum):
 # symbol: str, side: str, type: str, **kwargs
 
 
+class Order:
+    def __init__(self, price: float, side: Side, quantity: float) -> None:
+        self.price = price
+        self.side = side
+        self.quantity = quantity
+
+
 class BinanceOrder(Order):
     def __init__(
         self,
         price: float,
-        isSell: bool,
+        side: Side,
         quantity: float,
         type: OrderType,
         timeInforce: BinanceTimeInForce = None,
         symbol: str = "BTCUSDT",
     ) -> None:
-        super().__init__(price, isSell, quantity)
+        super().__init__(price, side, quantity)
         self.type = type
         self.timeInForce = timeInforce
         self.symbol = symbol
 
     def to_exchange_dict(self):
-        side = "SELL" if self.isSell else "BUY"
+        # side = "SELL" if self.isSell else "BUY"
         return {
             # "side": side,
             # "type": self.type.value,
