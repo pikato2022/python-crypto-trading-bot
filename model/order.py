@@ -17,8 +17,8 @@ class BinanceTimeInForce(StrEnum):
 
 
 class Side(StrEnum):
-    BUY = auto()
-    SELL = auto()
+    BUY = "BUY"
+    SELL = "SELL"
 
 
 class OrderType(StrEnum):
