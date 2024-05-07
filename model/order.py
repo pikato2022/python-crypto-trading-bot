@@ -48,7 +48,7 @@ class BinanceOrder(Order):
         side: Side,
         quantity: float,
         type: OrderType,
-        timeInforce: BinanceTimeInForce = None,
+        timeInforce: BinanceTimeInForce = BinanceTimeInForce.GTC,
         symbol: str = "BTCUSDT",
     ) -> None:
         super().__init__(price, side, quantity)

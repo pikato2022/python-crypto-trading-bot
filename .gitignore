@@ -50,6 +50,7 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
-constant.py
 
 /venv
+prod.json
+test.json

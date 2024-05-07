@@ -5,7 +5,6 @@ import logging
 from my_log import config_logging
 from binance.websocket.spot.websocket_stream import SpotWebsocketStreamClient
 from kafka import KafkaProducer
-from binance.spot import Spot
 import json
 from model.order import BinanceOrder, BinanceTimeInForce, OrderType, Side
 from exchange_client.binance_future_api_client import (
@@ -19,7 +18,7 @@ config_logging(logging, logging.INFO)
 
 class BinanceConnector:
     def __init__(
-        self, producer: KafkaProducer, apiClient: BinanceFutureAPIClient
+        self, producer: KafkaProducer | None, apiClient: BinanceFutureAPIClient
     ) -> None:
 
         self.producer = producer
@@ -84,11 +83,10 @@ if __name__ == "__main__":
     )
     binanceConnector = BinanceConnector(producer, apiClient)
     # binanceConnector.create_order(64950, Side.BUY, 0.004)
-    balances = binanceConnector.get_balance()
-    # binanceConnector.create_order(64500, Side.SELL, 0.004)
-    # balances = binanceConnector.get_balance()
-    for balance in balances:
-        if balance.get("symbol") == "BTCUSDT":
-            logging.info(f"Current balance is {balance}")
-            break
-    # asyncio.run(binanceConnector.get_binance_trade_stream(symbol))
+    # # binanceConnector.create_order(64500, Side.SELL, 0.004)
+    # # balances = binanceConnector.get_balance()
+    # for balance in balances:
+    #     if balance.get("symbol") == "BTCUSDT":
+    #         logging.info(f"Current balance is {balance}")
+    #         break
+    asyncio.run(binanceConnector.get_binance_trade_stream(symbol))

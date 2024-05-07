@@ -1,5 +1,6 @@
 import time
 import requests
+from utils.config import Config
 from utils import constant, time_utils
 from utils.string_utils import (
     check_required_parameters,
@@ -33,16 +34,15 @@ class BinanceFutureAPIClient(BinanceAPIPublicAPIClient):
 
     def __init__(
         self,
-        api_key: str,
-        api_secret: str,
+        config: Config,
         base_url: str,
         timeout: int | None = None,
         private_key: str | None = None,
         private_key_pass: str | None = None,
     ):
         super().__init__(base_url, timeout)
-        self.api_key = api_key
-        self.api_secret = api_secret
+        self.api_key = config.future_api_key
+        self.api_secret = config.future_api_secret
         self.base_url = base_url
         self.timeout = timeout
         self.private_key = private_key

@@ -1,0 +1,6 @@
+{
+    "BINANCE_API_KEY": "<your-api-key>",
+    "BINANCE_API_SECRET": "<your-api-secret>",
+    "BINANCE_FUTURE_API_KEY": "<your-future-api-key>",
+    "BINANCE_FUTURE_API_SECRET": "<your-future-api-secret>"
+}
