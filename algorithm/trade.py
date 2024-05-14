@@ -1,6 +1,6 @@
 from exchange_client.binance_future_api_client import BinanceFutureAPIClient
-from trading_bot.utils.config import Config
-from utils.binance_connector import BinanceConnector
+from model.order import BinanceOrder, BinanceTimeInForce, OrderType, Side
+from utils.config import Config
 from utils.kafka_core import init_consumer
 import pandas as pd
 import asyncio
@@ -29,21 +29,70 @@ async def moving_average_5_strategy(df, in_position):
     return in_position
 
 
-async def moving_average_5_strategy_bn(queue, binanceConnector):
-    last_price = queue.back()
+async def moving_average_5_strategy_bn(
+    apiClient: BinanceFutureAPIClient, queue: deque[float]
+) -> None:
+    last_price = queue[-1]
+    balance, side = get_balance(apiClient)
+    logging.info(f"Current balance is {balance}")
+    # if side == "SELL":
+    #     isSell = True
 
+    # if side == "BUY":
+    #     isSell = False
+    # if balance == 0:
+    #     isSell = False
+    # if balance > 2:
+    #     isSell = True
     sma5 = np.mean(queue)
+    # if last_price higher than sma 10% and
+    if last_price > sma5 * 1.008:
+        if balance > -2:
+            create_order(apiClient, last_price, Side.SELL, 0.004)
+    elif last_price < sma5 * 0.985:
+        if balance < 2:
+            create_order(apiClient, last_price, Side.BUY, 0.004)
+
+    queue.popleft()
 
 
-def buy_order(price):
-    pass
+def create_order(
+    apiClient: BinanceFutureAPIClient, price: float, side: Side, quantity: float
+):
+    # logging.info(self.apiClient.time())
+    order = BinanceOrder(
+        price,
+        side,
+        quantity,
+        OrderType.LIMIT,
+        BinanceTimeInForce.IOC,
+        "BTCUSDT",
+    )
+    logging.info(f"Created order {order.to_exchange_dict}")
+    response = apiClient.new_order(
+        "BTCUSDT",
+        order.side,
+        OrderType.LIMIT,
+        **order.to_exchange_dict(),
+    )
+    logging.info(f"Response from order request: {response}")
 
 
-def sell_order(price):
-    pass
+def get_balance(apiClient: BinanceFutureAPIClient) -> tuple[float, str]:
+    balance_json = apiClient.account()
+    # logging.INFO(f"Current balance is {balance_json['balances']}")
+    # for asset in balance_json["assets"]:
+    #     if asset.get("asset") == "BTC":
+    #         logging.info(f"Current asset balance is {asset}")
+    for pos in balance_json["positions"]:
+        if pos.get("symbol") == "BTCUSDT":
+            logging.info(f"Current position is {pos}")
+
+            return pos["positionAmt"], pos["positionSide"]
+    return 0, "BOTH"
 
 
-def to_type(df, dtype):
+def to_type(df: pd.DataFrame, dtype: dict) -> pd.DataFrame:
     df = df.astype(dtype=dtype)
     return df
 
@@ -87,7 +136,7 @@ async def main_cryptocom():
 
 
 async def main_binance():
-    consumer = init_consumer("binance-get-price")
+    consumer = init_consumer(constant.KAFKA_TOPIC_BINANCE)
     symbol = "btcusdt"
     config = Config.read_from_file("test.json")
     apiClient = BinanceFutureAPIClient(
@@ -95,12 +144,15 @@ async def main_binance():
         base_url=constant.DEV_BINANCE_API_FUTURE_ENDPOINT,
         # show_header=True,
     )
-    binanceConnector = BinanceConnector(None, apiClient)
+
     price_queue = deque()
+
     while next(consumer):
         msg = next(consumer)
-        logging.info(f"Message is {msg}")
-        price_queue.append(msg["p"])
+        logging.info(f"Receive price :{msg.value['p']}")
+        price_queue.append(float(msg.value["p"]))
+        if len(price_queue) == 15:
+            await moving_average_5_strategy_bn(apiClient, price_queue)
 
 
 if __name__ == "__main__":

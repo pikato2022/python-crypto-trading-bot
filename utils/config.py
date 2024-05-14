@@ -22,5 +22,5 @@ class Config:
             secret["BINANCE_API_KEY"],
             secret["BINANCE_API_SECRET"],
             secret["BINANCE_FUTURE_API_KEY"],
-            secret["BINANCE_FUTURE_API_KEY"],
+            secret["BINANCE_FUTURE_API_SECRET"],
         )

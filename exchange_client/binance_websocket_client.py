@@ -39,4 +39,3 @@ class BinanceWebSocketClient:
     def on_message(self, msg: str | bytes):
         if self.on_message_callbacks:
             self.on_message_callbacks(msg)
-        pass

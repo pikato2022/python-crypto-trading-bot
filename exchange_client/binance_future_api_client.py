@@ -15,7 +15,7 @@ from binance.lib.authentication import (
 import logging
 from utils.my_log import config_logging
 
-config_logging(logging, logging.DEBUG)
+config_logging(logging, logging.INFO)
 
 
 class BinanceAPIPublicAPIClient:

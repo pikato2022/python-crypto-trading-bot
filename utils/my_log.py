@@ -1,7 +1,7 @@
 import time
 
 
-def config_logging(logging, logging_level, log_file: str = None):
+def config_logging(logging, logging_level, log_file: str | None = None):
     """Configures logging to provide a more detailed log format, which includes date time in UTC
     Example: 2021-11-02 19:42:04.849 UTC <logging_level> <log_name>: <log_message>
 
