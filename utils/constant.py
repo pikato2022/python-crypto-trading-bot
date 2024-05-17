@@ -30,3 +30,7 @@ CANCEL_ORDER_URI = "private/cancel-order"
 
 KAFKA_TOPIC_CRYPTO_COM = "get-price"
 KAFKA_TOPIC_BINANCE = "binance-get-price"
+
+
+### Moving Average Constant
+PERIODS = 5

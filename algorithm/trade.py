@@ -1,3 +1,5 @@
+import math
+from algorithm.moving_average import MovingAverage, SimpleMovingAverage
 from exchange_client.binance_future_api_client import BinanceFutureAPIClient
 from model.order import BinanceOrder, BinanceTimeInForce, OrderType, Side
 from utils.config import Config
@@ -30,30 +32,26 @@ async def moving_average_5_strategy(df, in_position):
 
 
 async def moving_average_5_strategy_bn(
-    apiClient: BinanceFutureAPIClient, queue: deque[float]
+    apiClient: BinanceFutureAPIClient, movingAvg: MovingAverage
 ) -> None:
-    last_price = queue[-1]
+    last_price = movingAvg.current_price
     balance, side = get_balance(apiClient)
     logging.info(f"Current balance is {balance}")
-    # if side == "SELL":
-    #     isSell = True
+    sma5 = movingAvg.cal_moving_average()
+    if sma5 is None:
+        return
 
-    # if side == "BUY":
-    #     isSell = False
-    # if balance == 0:
-    #     isSell = False
-    # if balance > 2:
-    #     isSell = True
-    sma5 = np.mean(queue)
-    # if last_price higher than sma 10% and
-    if last_price > sma5 * 1.008:
+    logging.info(f"last price: {last_price:.2f} average: {sma5:.2f}")
+    if last_price > sma5 * 1.002:  # type: ignore
         if balance > -2:
-            create_order(apiClient, last_price, Side.SELL, 0.004)
-    elif last_price < sma5 * 0.985:
+            create_order(
+                apiClient, round(last_price * 0.99, 1), Side.SELL, 0.004  # type: ignore
+            )
+    elif last_price < sma5 * 0.998:  # type: ignore
         if balance < 2:
-            create_order(apiClient, last_price, Side.BUY, 0.004)
-
-    queue.popleft()
+            create_order(
+                apiClient, round(last_price * 1.01, 1), Side.BUY, 0.004  # type: ignore
+            )
 
 
 def create_order(
@@ -86,9 +84,9 @@ def get_balance(apiClient: BinanceFutureAPIClient) -> tuple[float, str]:
     #         logging.info(f"Current asset balance is {asset}")
     for pos in balance_json["positions"]:
         if pos.get("symbol") == "BTCUSDT":
-            logging.info(f"Current position is {pos}")
+            logging.debug(f"Current position is {pos}")
 
-            return pos["positionAmt"], pos["positionSide"]
+            return float(pos["positionAmt"]), pos["positionSide"]
     return 0, "BOTH"
 
 
@@ -145,14 +143,17 @@ async def main_binance():
         # show_header=True,
     )
 
-    price_queue = deque()
-
+    # price_queue = deque()
+    movingAvg = SimpleMovingAverage()
     while next(consumer):
         msg = next(consumer)
         logging.info(f"Receive price :{msg.value['p']}")
-        price_queue.append(float(msg.value["p"]))
-        if len(price_queue) == 15:
-            await moving_average_5_strategy_bn(apiClient, price_queue)
+        movingAvg.add_element(float(msg.value["p"]))
+        if movingAvg.length >= 3:
+            await moving_average_5_strategy_bn(apiClient, movingAvg)
+
+        if movingAvg.length >= 50:
+            movingAvg.remove_first()
 
 
 if __name__ == "__main__":
